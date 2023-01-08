@@ -1,7 +1,7 @@
 # Aplicação do JPA em um Projeto Maven
 Utilização da especificação JPA com o framework Hibernate para utilização de persistência em um projeto Maven Java
 
-[![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=MAVEN&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
+[![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=Maven-Apache&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
 [![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=GitHub&logoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
 [![Hibernate Badge](https://img.shields.io/badge/-Hibernate-green?style=flat-square&logo=Hibernate&logoColor=white&link=https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)](https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)
 
@@ -21,7 +21,7 @@ Como o *Hibernate* ficou muito popular nos projetoso Java, também surgiram conc
 Posteriormente foi padronizada uma estrutura de bibliotea com o objetivo de criar um modelo de persistência, conhecida como *Object Ralational Mapping - ORM*, para realizar o mapeamento entre a *orientação a objetos* e os *relacionamentos* dos bancos de dados, sendo gerado a base da *Java Persistence API*, que é uma especificação para padronizar este mapeamento a objetos relacionais.
 
 ## Hibernate + JPA
-O **Hibernate**,  assim como os demais frameworks de mercado, se tornaram uma implementação, na qual as mesmas para permanecerem atuantes no mercado devem seguir a especificação JPA, para permitir que não sejam fortemente acopladas a projetos Java. Em 2010 foi lançada a versão 3.5.0 do Hibernate que era compatível com a versão 2.0 da JPA, isto significa que basta trocar seu jar e seus importes para permitir a substituição dos mesmos sem ocasionar impactos relevantes aos projetos.CqODs
+O **Hibernate**,  assim como os demais frameworks de mercado, se tornaram uma implementação, na qual as mesmas para permanecerem atuantes no mercado devem seguir a especificação JPA, para permitir que não sejam fortemente acopladas a projetos Java. Em 2010 foi lançada a versão 3.5.0 do Hibernate que era compatível com a versão 2.0 da JPA, isto significa que basta trocar seu jar e seus importes para permitir a substituição dos mesmos sem ocasionar impactos relevantes aos projetos.
 
 <img align="middle" width="250" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/CqODs.png">
 
@@ -108,7 +108,30 @@ Outra propriedade importante para esclarecer para JPA o dialeto, quer dizer, com
 > OBS: No caso do H2, será "org.hibernate.dialect.H2Dialect". 
 
 ### Entidades (Entity)
+Temos a configuração da persistência realizada, agora precisamos criar os objetos estarão imcubidos de manusear as informações a serem passadas e recebidas pelo banco de dados. Para isso, criamos um objeto que representará uma tabela no banco de dados e atribuimos a ela algumas anotações da JPA a fim de mostra-la o que cada atributo representa. Como exemplo, temos a classe *Produto* que represtará a tabela *produtos* na database.
+```java
+@Entity
+@Table(name = "produtos")
+public class Produto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nome;
+    private String descricao;
+    private BigDecimal preco;
 
+    public Produto() {
+    }
+
+    /* Getter e Setter - caso necessários *?
+```
+> OBS: Toda classe que representará uma tabela **é obrigatória a presença do construtor padrão.**
+
+Sobre as anotações presentes na classe:
+*   Entity -
+*   Table - 
+*   Id - 
+*   GeneratedValue
 
 ### Entity Manager
 
