@@ -30,7 +30,7 @@ Para trabalharmos com a JPA, tecomo que escolher um framework para implementa-la
 ## Projeto Maven e suas dependências
 O **Maven** é uma ferramenta desenvolvida pela *Apache*, ela serve para gerenciar as dependências e automatizar seus *builds*. sendo o arquivo **pom.xml** o responsável por aplicar suas configurações ao projeto.
 Desta forma, para implementarmos o Hibernate ao projeto devemos explicitar sua dependência utilizando as tags abaixo.
-```java
+```xml
 <dependencies>
     <dependency>
         <groupId>org.hibernate</groupId>
@@ -46,7 +46,7 @@ Ao analisar o **"External Libraries"**, você perceberá que ele baixou uma sér
 
 ### O Arquivo Persistence (XML)
 As configurações da JPA estão presentes no arquivo **persistence.xml**, na qual é possível configurar através do Java, mas fica explicitado no modo de arquivo.
-```java
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.2"
     xmlns="http://xmlns.jcp.org/xml/ns/persistence"
@@ -57,7 +57,7 @@ As configurações da JPA estão presentes no arquivo **persistence.xml**, na qu
 
 ```
 A **tag** de principal importancia para a configuração da JPA é a tag **persistence-unit**, na qual é uma tag *obrigatória*, que é onde definimos os *namespaces*. Nela temos dois parâmetros, que são o *name*, na qual podemos nomear como desejado para depois apontar qual configuração desejamos utilizar, e o *transaction-type* que define a estratégia a ser utilizada para implementar a configuração, na qual possuí dois valores, o **JTA** que é adequada quando estamos utilizando um servidor de aplicações (EJB, JMS, JEE) onde o servidor se encarrega de cuidar das transações, e o **RESOURCE-LOCAL** para aplicações locais (*stand-alone*) que não possuem um servidor de aplicações, sendo seu processamento realizados na mesma instância.
-```java
+```xml
 <persistence-unit name="jpa_implement" transaction-type="RESOURCE_LOCAL">
 
 </persistence-unit>
@@ -68,7 +68,7 @@ A persistence-unit representa uma unidade de persistência, isso significa que, 
 > OBS: No nosso caso, foi apelidado o nome de **jpa_implement** mas nada impediria de colocar um nome que definisse com mais exatidão o banco de dados ou base de dados que se deseja relacionar.
 
 Na estrutura da tag **persistene-unit** adicionamos quais são as propriedades a serem aplicadas no contexto da JPA. Desta maneira, implementamos em sua estrutura a tag ***properties***, e em seu contexto, aplicamos cada propriedade que definirá a atuação no cenário JPA, aplicadas com a tag ***property*** na qual tem como parãmetros um nome (*name*) e o valor (*value*).
-```java
+```xml
     <persistence-unit name="jpa_implement" transaction-type="RESOURCE_LOCAL">
         <properties>
                 <property name="" value=""/>
@@ -79,7 +79,7 @@ Na estrutura da tag **persistene-unit** adicionamos quais são as propriedades a
 ```
 
 As propriedades da JPA também tem caracterisiticas obrigatórias de exposição. Isto significa que, é necessário informar as caracteristicas do banco de dados a ser utilizado pela implementação. A propriedade *name* possui um nome especifico atribuido ao banco de dados escolhido que precisa ser informado, assim como, o parâmetro *value* relacionado ao valor, que definem a definição do driver de conexão com o banco de dados. Aqui no projeto, como selecionamos o banco de dados *H2* as definições ficaram da seguinte forma.
-```java
+```xml
     <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
 ```
 > OBS:  O driver mudará de acordo com o banco de dados escolhido, desta forma, caso fosse o **MySQL**, o driver seria ***com.mysql.driver***, se fosse **PostgreSQL**, seria ***org.postgresql.driver*** e assim por diante. 
@@ -87,14 +87,14 @@ As propriedades da JPA também tem caracterisiticas obrigatórias de exposição
 A JPA é uma abstração do framework do JDBC que simplifica o seu uso, mas que aplica todas as suas interações para realizar esta interpretação da camada orientada a objetos com o modelo relacional.
 
 Além do driver, é necessário configurar a JPA indicando qual é o caminho (URL) do banco de dados, isto é, onde está o endereço de conexão com o banco de dados. Esse endereço também varia de acordo com o banco de dados. 
-```java
+```xml
     <property name="javax.persistence.jdbc.url" value="jdbc:h2:mem:project_jpa"/>
 
 ```
 > OBS: No caso do H2, será "jdbc:h2:mem:project_jpa". Isto é, queremos que o database no H2 se chame *Project JPA*. 
 
 Todo banco de dados possui suas definições de usuário e senha. Portanto, teremos mais duas propriedades que precisamos definir para configuração da JPA, que são , a *"jdbc.user"*, e a *"jdbc.password"*. 
-```java
+```xml
     <property name="javax.persistence.jdbc.user" value="sa"/>
     <property name="javax.persistence.jdbc.password" value=""/>
 ```
@@ -102,13 +102,13 @@ Todo banco de dados possui suas definições de usuário e senha. Portanto, tere
 
 
 Outra propriedade importante para esclarecer para JPA o dialeto, quer dizer, como a aplicação conversará com o banco de dados, é a propriedade ***"hibernate.dialect"***. O Hibernate precisa saber qual é a classe que tem o dialeto do banco de dados, na qual esclarece as particularidades do banco de dados. Como cada banco de dados pode ter as suas particularidades, o dialeto é o que fará a comunicação correta com o banco de dados. 
-```java
+```xml
     <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
 ```
 > OBS: No caso do H2, será "org.hibernate.dialect.H2Dialect". 
 
 ### Entidades (Entity)
-Temos a configuração da persistência realizada, agora precisamos criar os objetos estarão imcubidos de manusear as informações a serem passadas e recebidas pelo banco de dados. Para isso, criamos um objeto que representará uma tabela no banco de dados e atribuimos a ela algumas anotações da JPA a fim de mostra-la o que cada atributo representa. Como exemplo, temos a classe *Produto* que represtará a tabela *produtos* na database.
+Temos a configuração da persistência realizada, agora precisamos criar os objetos estarão imcubidos de manusear as informações a serem passadas e recebidas pelo banco de dados. Para isso, criamos um objeto que representará uma tabela no banco de dados e atribuimos a ela algumas anotações da JPA a fim de mostra-la o que cada atributo representa. Na JPA, isso será feito por uma classe Java, que na JPA é chamda de ***Entidade***. Como exemplo, temos a classe *Produto* que represtará a tabela *produtos* na database.
 ```java
 @Entity
 @Table(name = "produtos")
@@ -127,13 +127,22 @@ public class Produto {
 ```
 > OBS: Toda classe que representará uma tabela **é obrigatória a presença do construtor padrão.**
 
+Se faz necessário mapear todas as tabelas no banco de dados por uma entidade, que nada mais é do que uma classe Java. Desta forma, o que precisamos entender é que a JPA não é uma especificação para um ORM, pois com a ORM somente é feito o mapeamento objeto-relacional. A JPA é muito mais do que somente o relacionamento, sendo que a partir da JPA 2.0 utilizamos **anotações** para definir regras para este mapeamento.
+
 Sobre as anotações presentes na classe:
-*   Entity -
-*   Table - 
-*   Id - 
-*   GeneratedValue
+*   Entity - Ela informa a JPA que esta classe representa uma Entidade de Banco de Dados;
+*   Table - Permite definir a qual tabela este objeto está atrelado ao informar o nome da tabela no banco de dados, através do parâmetro *name*;
+*   Id - Permite definir qual é o atributo que representa a *Primary Key* da tabela no objeto;
+*   GeneratedValue - informa a JPA quem será responsável por administrar a geração de chaves;
+*   Column - Não foi aplicado neste exemplo, mas caso quisessemos definir um nome para o atributo da classe diferente de uma coluna da tabela, utilizaríamos esta anotação para passar o nome da coluna que este atributo representaria.
+
+Pela JPA, deveríamos passar todas as classes/entidades do nosso projeto, ou seja, passaríamos o caminho completo da classe no arquivo persistence.xml através da **tag class**, porém, ao utilizar o Hibernate, não é necessário adicionar a tag, isso porque o framework consegue encontrar automaticamente as classes/entidades do projeto. Essa é uma particularidade do Hibernate, pode ser que as outras implementações não façam isso e, portanto, se faz necessário esta inclusão. 
 
 ### Entity Manager
 
 
 
+```xml
+    <property name="hibernate.show_sql" value="true"/>
+    <property name="hibernate.format_sql" value="true"/>
+```
