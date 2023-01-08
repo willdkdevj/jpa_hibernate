@@ -1,14 +1,14 @@
 # Aplicação do JPA em um Projeto Maven
 Utilização da especificação JPA com o framework Hibernate para utilização de persistência em um projeto Maven Java
 
-[![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=Maven&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
-[![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=JPA&logoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
+[![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=MAVEN&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
+[![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=GitHub&logoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
 [![Hibernate Badge](https://img.shields.io/badge/-Hibernate-green?style=flat-square&logo=Hibernate&logoColor=white&link=https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)](https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)
 
 ## Por que utilizar a especificação JPA
 O JDBC surgiu para fazer o papel de interpretador entre os bancos de dados e as aplicações desenvolvidas em Java. Mas existe alguns fatores em sua estrutura que complica sua manutenção e operabilidade nos projetos que são o **alto acoplamento** com banco de dados, onde qualquer mudança no banco de dados gera um impacto enorme na aplicação, além disso, o segundo fator problemático desta implmentação é que sua estrutura é **muito verbosa**, o que ocasiona a escrita de muito código para torná-la efetiva ao projeto.
 
-<img align="right" width="400" height="250" src="https://github.com/willdkdevj/real_threads/blob/master/assets/JPAHibernate.jpg">
+<img align="right" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/JPAHibernate.jpg">
 
 Este cenário que motivou a comunidade Java a elaborar uma solução que permitisse uma forma de comunicação das aplicações com os bancos de dados com as aplicações que eram desenvolvidas, mas que não fossem trabalhosa a mudanças de base de dados refletidas na aplicação, assim como, até mesmo a mudança da estrutura de um banco de dados, como a substituição de um *MySQL* para um *Oracle*, por exemplo.
 Além disso, a ideia principal era não ter tanto esforço para implementar este tipo de camada de comunicação interpretativa entre eles, desta forma, surgiu a especificação JPA, mas antes surgiu o framework Hibernate.
@@ -23,7 +23,7 @@ Posteriormente foi padronizada uma estrutura de bibliotea com o objetivo de cria
 ## Hibernate + JPA
 O **Hibernate**,  assim como os demais frameworks de mercado, se tornaram uma implementação, na qual as mesmas para permanecerem atuantes no mercado devem seguir a especificação JPA, para permitir que não sejam fortemente acopladas a projetos Java. Em 2010 foi lançada a versão 3.5.0 do Hibernate que era compatível com a versão 2.0 da JPA, isto significa que basta trocar seu jar e seus importes para permitir a substituição dos mesmos sem ocasionar impactos relevantes aos projetos.CqODs
 
-<img align="middle" width="250" height="250" src="https://github.com/willdkdevj/real_threads/blob/master/assets/CqODs.png">
+<img align="middle" width="250" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/CqODs.png">
 
 Para trabalharmos com a JPA, tecomo que escolher um framework para implementa-la, não dá para utilizar a JPA "pura" porque ela é só a "casca", ou seja, uma abstração.
 
