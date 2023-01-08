@@ -2,7 +2,7 @@
 Utilização da especificação JPA com o framework Hibernate para utilização de persistência em um projeto Maven Java
 
 [![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=Apache-Maven&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
-[![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=Apache-JPAlogoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
+[![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=GitHublogoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
 [![Hibernate Badge](https://img.shields.io/badge/-Hibernate-green?style=flat-square&logo=Hibernate&logoColor=white&link=https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)](https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)
 
 ## Por que utilizar a especificação JPA
@@ -116,11 +116,27 @@ public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "name")
     private String nome;
+    @Column(name = "description")
     private String descricao;
+    @Column(name = "price")
     private BigDecimal preco;
+    @Column(name = "createdAt")
+    private LocalDate dataCriacao;
+    @Enumerated(EnumType.STRING)
+    private TipoProduto tipo;
 
+    /* O construtor padrão deve sempre estar presente em transações JPA/Hibernate */
     public Produto() {
+    }
+
+    public Produto(String nome, String descricao, BigDecimal preco, TipoProduto tipo) {
+        this.nome = nome;
+        this.descricao = descricao;
+        this.preco = preco;
+        this.dataCriacao = LocalDate.now();
+        this.tipo = tipo;
     }
 
     /* Getter e Setter - caso necessários *?
@@ -134,7 +150,8 @@ Sobre as anotações presentes na classe:
 *   **Table** - Permite definir a qual tabela este objeto está atrelado ao informar o nome da tabela no banco de dados, através do parâmetro *name*;
 *   **Id** - Permite definir qual é o atributo que representa a *Primary Key* da tabela no objeto;
 *   **GeneratedValue** - informa a JPA quem será responsável por administrar a geração de chaves;
-*   **Column** - Define o nome da coluna de uma tabela para o atributo da classe.
+*   **Column** - Define o nome da coluna de uma tabela para o atributo da classe;
+*   **Enumerated** - Define a estratégia a ser adotada para o tipo **ENUM**, na qual por padrão é utilizada pelo Hibernate a estratégia ***ORDINAL***, que define um numeral para o atributo estático enum conforme a ordem de seu cadastro, o segundo é o ***STRING***, que assume que o nome de foi dado ao atributo estático é o que deve ser inserido como valor ao banco de dados.
 
 Pela JPA, deveríamos passar todas as classes/entidades do nosso projeto, ou seja, passaríamos o caminho completo da classe no arquivo persistence.xml através da **tag class**, porém, ao utilizar o Hibernate, não é necessário adicionar a tag, isso porque o framework consegue encontrar automaticamente as classes/entidades do projeto. Essa é uma particularidade do Hibernate, pode ser que as outras implementações não façam isso e, portanto, se faz necessário esta inclusão. 
 
@@ -187,8 +204,52 @@ Os valores que podemos informar a este parâmetro são:
 *   ***validate*** - Tem a função de não modificar a database já criada, apenas validar se está tudo funcional e cria uma estrutura de *log's*.
 
 Para visulizar os comandos SQL gerados pelo **Hibernate** de modo formatado para facilitar sua análise, inserimos estas propriedades as configurações da persistência (persistence-unit) habilitado.
-
 ```xml
     <property name="hibernate.show_sql" value="true"/>
     <property name="hibernate.format_sql" value="true"/>
 ```
+
+### Transaction (Camada DAO)
+Vimos que para o EntityManager funcionar ele deve estar com um **Contexto Transacional** iniciado, este contexto mostra ao Hibernate o que deve ser analisado a fim de ser aplicado para transação relacional entre a aplicação e o banco de dados, criando um escopo de comandos a serem invocados para permitir a transação que desejamos. Seja ela para inserir, consultar, atualizar ou excluir um dado na base de dados.
+
+Desta forma, existe um padrão de projeto que nos auxilia na organização de classes que possuí este fim de agrupar estas classes de interface chamada de **Data Access Object (DAO)**, então, foi criado o pacote *dao* com a classe *ProdutoDao* a fim de retirarmos estes comandos de nossa aplicação os abstraindo em um classe que possui a única responsabilidade de realiza-los conforme o contexto para a qual foi invocada.
+```java
+public class ProdutoDao {
+
+    private EntityManager entity;
+
+    public ProdutoDao(EntityManager entity) {
+        this.entity = entity;
+    }
+
+    public void cadastrar(Produto produto) {
+        try{
+            /* Inicia escopo transacional */
+            entity.getTransaction().begin();
+
+            /* Invoca instância de persistência (INSERT) */
+            this.entity.persist(produto);
+            
+            /* Garante que o esopo de persistência será executado */
+            entity.getTransaction().commit();
+       } catch (Exception ex) {
+            /*
+             *  Caso ocorra algum probleam na esecução é revertido o escopo para antes da abertura de escopo
+             *  Retornando para seu estado de origem.
+             */
+            entity.getTransaction().rollback();
+            throw new ErrorJPAException("Não foi possível concluir a transação" + ex.getMessage());
+        } finally {
+            /* Encerra escopo transacional */
+            entity.close();
+        }
+    }
+}
+```
+
+No código, quando precisar inserir um produto na tabela que a representa em nossa aplicação, será necessário passar o EntityManager para iniciar o contexto transacional ao invocar o método **cadastrar**. Note que quem invoca o método não sabe como é realizada a persistência, pois toda esta responsabilidade está agora com a classe ProdutoDao, mas ela só deve fornecer o EntityManager que também é fornecido pelo método builerEntityManager, construído para este fim.
+```java
+    ProdutoDao dao = new ProdutoDao(FactoryEntity.builderEntityManager());
+    dao.cadastrar(celular);
+```
+

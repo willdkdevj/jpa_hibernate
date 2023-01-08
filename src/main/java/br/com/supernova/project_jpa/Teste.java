@@ -1,5 +1,8 @@
 package br.com.supernova.project_jpa;
 
+import br.com.supernova.project_jpa.dao.ProdutoDao;
+import br.com.supernova.project_jpa.enums.TipoProduto;
+import br.com.supernova.project_jpa.exception.ErrorJPAException;
 import br.com.supernova.project_jpa.factory.FactoryEntity;
 import br.com.supernova.project_jpa.model.Produto;
 
@@ -10,13 +13,10 @@ import java.math.BigDecimal;
 
 public class Teste {
     public static void main(String[] args) {
-        Produto celular = new Produto("Xiaomi Redmi", "Muito Bom", new BigDecimal(1300));
+        Produto celular = new Produto("Xiaomi Redmi", "Muito Bom", new BigDecimal(1300), TipoProduto.ELETRONICOS);
 
-        EntityManager entityManager = FactoryEntity.builderEntityManager();
-        entityManager.getTransaction().begin();
-        entityManager.persist(celular);
-        entityManager.getTransaction().commit();
-        entityManager.close();
+        ProdutoDao dao = new ProdutoDao(FactoryEntity.builderEntityManager());
+        dao.cadastrar(celular);
 
     }
 }
