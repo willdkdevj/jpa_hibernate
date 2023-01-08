@@ -4,6 +4,8 @@ import br.com.supernova.project_jpa.factory.FactoryEntity;
 import br.com.supernova.project_jpa.model.Produto;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.math.BigDecimal;
 
 public class Teste {
@@ -11,7 +13,10 @@ public class Teste {
         Produto celular = new Produto("Xiaomi Redmi", "Muito Bom", new BigDecimal(1300));
 
         EntityManager entityManager = FactoryEntity.builderEntityManager();
+        entityManager.getTransaction().begin();
         entityManager.persist(celular);
+        entityManager.getTransaction().commit();
+        entityManager.close();
 
     }
 }

@@ -9,8 +9,11 @@ public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "name")
     private String nome;
+    @Column(name = "description")
     private String descricao;
+    @Column(name = "price")
     private BigDecimal preco;
 
     public Produto() {

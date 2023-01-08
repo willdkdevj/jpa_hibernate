@@ -1,8 +1,8 @@
 # Aplicação do JPA em um Projeto Maven
 Utilização da especificação JPA com o framework Hibernate para utilização de persistência em um projeto Maven Java
 
-[![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=Maven-Apache&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
-[![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=GitHub&logoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
+[![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=Apache-Maven&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
+[![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=Apache-JPAlogoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
 [![Hibernate Badge](https://img.shields.io/badge/-Hibernate-green?style=flat-square&logo=Hibernate&logoColor=white&link=https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)](https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)
 
 ## Por que utilizar a especificação JPA
@@ -130,17 +130,63 @@ public class Produto {
 Se faz necessário mapear todas as tabelas no banco de dados por uma entidade, que nada mais é do que uma classe Java. Desta forma, o que precisamos entender é que a JPA não é uma especificação para um ORM, pois com a ORM somente é feito o mapeamento objeto-relacional. A JPA é muito mais do que somente o relacionamento, sendo que a partir da JPA 2.0 utilizamos **anotações** para definir regras para este mapeamento.
 
 Sobre as anotações presentes na classe:
-*   Entity - Ela informa a JPA que esta classe representa uma Entidade de Banco de Dados;
-*   Table - Permite definir a qual tabela este objeto está atrelado ao informar o nome da tabela no banco de dados, através do parâmetro *name*;
-*   Id - Permite definir qual é o atributo que representa a *Primary Key* da tabela no objeto;
-*   GeneratedValue - informa a JPA quem será responsável por administrar a geração de chaves;
-*   Column - Não foi aplicado neste exemplo, mas caso quisessemos definir um nome para o atributo da classe diferente de uma coluna da tabela, utilizaríamos esta anotação para passar o nome da coluna que este atributo representaria.
+*   **Entity** - Ela informa a JPA que esta classe representa uma Entidade de Banco de Dados;
+*   **Table** - Permite definir a qual tabela este objeto está atrelado ao informar o nome da tabela no banco de dados, através do parâmetro *name*;
+*   **Id** - Permite definir qual é o atributo que representa a *Primary Key* da tabela no objeto;
+*   **GeneratedValue** - informa a JPA quem será responsável por administrar a geração de chaves;
+*   **Column** - Define o nome da coluna de uma tabela para o atributo da classe.
 
 Pela JPA, deveríamos passar todas as classes/entidades do nosso projeto, ou seja, passaríamos o caminho completo da classe no arquivo persistence.xml através da **tag class**, porém, ao utilizar o Hibernate, não é necessário adicionar a tag, isso porque o framework consegue encontrar automaticamente as classes/entidades do projeto. Essa é uma particularidade do Hibernate, pode ser que as outras implementações não façam isso e, portanto, se faz necessário esta inclusão. 
 
 ### Entity Manager
+No **JDBC**, toda a integração com o banco de dados era feita com a classe ***Connection***, na qual faz a abertura de comunicação com o banco de dados. 
+Na **JPA**, existe algo similar, mas diferente de uma abertura de conexão utilizando uma instância é utilizado uma interface que realiza a conexão do Java ao banco de dados, esta interface é nomeada ***EntityManager***. Ela funciona como um administrador, o *"manager"* das entidades, ou ainda, o gestor das entidades. Desta forma, qualquer operação CRUD (Create, Read, Update e Delete) que são as operações que são realizadas para manusear a database é gerenciada por meio da JPA.
 
+Para criar o *EntityManager*, é necessário uma classe auxiliar que fabrica esta *manager*, o ***EntityManagerFactory***. Para obter uma instância desta fabrica é necessário invocar a  do **Persistence** (JPA), na qual possuí o método estático chamado ***CreateEntityManagerFactory***.
+```java
+    public class FactoryEntity {
+        /* Nome de Unidade de Persistência (persistence-unit) definido no persistence.xml */
+        private static final EntityManagerFactory FACTORY = Persistence.createEntityManagerFactory("jpa_implement");
 
+        public static EntityManager builderEntityManager(){
+            return FACTORY.createEntityManager();
+
+        }
+    }
+```
+Note que o método recebeu um parâmetro do tipo *String*, na qual é o nome fornecido para a configuração do JPA, neste caso, a unidade de persistência (***persistence-unit***) na qual é fornecido um nome, que é o parâmetro *name* do arquivo persistence.xml.
+
+Também foi criada uma classe auxiliar nomeada como *FactoryEntity* para obter a figura de fabrica, pois já que não podemos criar várias instâncias da *EntityManager*, na qual lançará mais uma exceção caso tenha mais de uma instância.
+
+Com o EntityManager criado, criaremos uma instância do objeto Produto, e passa-lo para o banco, para inserirmos um registro a uma tabela no banco de dados utilizamos o comando INSERT. Para isso, no EntityManager temos o métod persist() que implementa este comando seguindo a estrutura abaixo.
+```java
+    EntityManager em = factory.createEntityManager();
+
+    em.getTransaction().begin();
+    em.persist(produto);
+    em.getTransaction().commit();
+    em.close();
+
+```
+
+É o Hibernate que realiza o comando *insert* automaticamente baseado nas configurações da entidade através das anotações. Note que não montamos nenhuma linha de **comando em SQL**.
+
+No persistence.xml, na tag persistence-unit, além do parâmetro *name*, há o parâmetro *transaction-type*, que no caso, aplicamos o valor **"RESOURCE_LOCAL"**, ou seja, não temos o controle de transação automático. Desta forma, foi necessário delimitar onde começa e encerra uma transação para que seja entendido o escopo. Para isso, utilizamos o método getTransaction() para obter uma instância de transação e os métodos begin() para iniciar e o método close() para encerrar o contexto transacional.
+
+No nosso caso, o persist() é o método que realiza a interpretação do comando *insert* para ser encaminhado ao banco de dados. Já para garantir que este processo sejá efetivado, é necessário confirma-lo utilizando o método **commit()**.
+
+Outro fator também para conseguir realizar esta transação é já existir, do outro lado, no caso, no lado do banco de dados, já criada a Database e as tabelas para realizar esta transação. Desta forma, foi adicionada a propriedade (*property*) para que o Hibernate gere os comandos SQL para criar a database automaticamente e suas respectivas tabelas conforme as configurações aplicadas as classes mapeadas como entidades.
+```xml
+    <property name="hibernate.hbm2ddl.auto" value="update"/>
+```
+
+Os valores que podemos informar a este parâmetro são:
+*   ***create*** - Tem a função de criar o banco de dados, na qual será apagado tudo e criar todas as tabelas. Após sua criação e iniciada pela a aplicação não será possível mais apagar as tabelas;
+*   ***create-drop*** - Tem a função de criar as tabelas quando é iniciada a aplicação, onde ao finaliza-la será excluída a base de dados criada;
+*   ***update*** - Tem a função de criar a database e suas respectivas tabelas, se elas não existirem, caso já existirem e tiverem alterações, atualize o que mudou;
+*   ***validate*** - Tem a função de não modificar a database já criada, apenas validar se está tudo funcional e cria uma estrutura de *log's*.
+
+Para visulizar os comandos SQL gerados pelo **Hibernate** de modo formatado para facilitar sua análise, inserimos estas propriedades as configurações da persistência (persistence-unit) habilitado.
 
 ```xml
     <property name="hibernate.show_sql" value="true"/>
