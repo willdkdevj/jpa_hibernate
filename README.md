@@ -2,7 +2,7 @@
 Utilização da especificação JPA com o framework Hibernate para utilização de persistência em um projeto Maven Java
 
 [![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=Apache-Maven&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
-[![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=GitHublogoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
+[![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=GitHub&logoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
 [![Hibernate Badge](https://img.shields.io/badge/-Hibernate-green?style=flat-square&logo=Hibernate&logoColor=white&link=https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)](https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)
 
 ## Por que utilizar a especificação JPA
@@ -209,6 +209,8 @@ Para visulizar os comandos SQL gerados pelo **Hibernate** de modo formatado para
     <property name="hibernate.format_sql" value="true"/>
 ```
 
+<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/saida_hibernate.png">
+
 ### Transaction (Camada DAO)
 Vimos que para o EntityManager funcionar ele deve estar com um **Contexto Transacional** iniciado, este contexto mostra ao Hibernate o que deve ser analisado a fim de ser aplicado para transação relacional entre a aplicação e o banco de dados, criando um escopo de comandos a serem invocados para permitir a transação que desejamos. Seja ela para inserir, consultar, atualizar ou excluir um dado na base de dados.
 
@@ -253,3 +255,72 @@ No código, quando precisar inserir um produto na tabela que a representa em nos
     dao.cadastrar(celular);
 ```
 
+## Relacionamentos Entre Tabelas (Mapeamento)
+Agora foi solicitado para gente mapear uma nova entidade que foi inserida ao banco de dados, que além de sua criação, ela tem uma relação de cardinalidade com a entidade Produto, conforme ilustra a imagem abaixo.
+
+<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/cardinalidade.png">
+
+É necessário criar uma classe Categoria implementando os atributos correspondente a solicitação e também implementar as anotações JPA para informarmos ao Hibernate o mapeamento para sua criação na database definida no persistence.xml
+```java
+@Entity
+@Table(name = "categorias")
+public class Cateogoria {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(name = "name")
+    private String nome;
+
+    public Cateogoria() {
+    }
+
+    public Cateogoria(String nome) {
+        this.nome = nome;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+}
+```
+
+Depois é necessário alterar a classe **Produto**, para implementar um novo atributo do tipo *Categoria*, mas nela será necessário algumas implementações especiais para criar esta relacionamento entre elas. Vejamos as anotações aplicadas.
+```java
+    @ManyToOne
+    private Cateogoria cateogoria;
+```
+ Na JPA, para informarmos que a cardinalidade desse relacionamento é **"muitos para um (*-1)"**, é aplicado a anotação **@ManyToOne**. Ou seja, muitos produtos estão vinculados com uma Categoria. Uma categoria pode ter vários produtos, mas o produto tem uma única categoria, no caso, o relacionamento de **"um para um"**. A escolha dependerá da cardinalidade, do tipo de relacionamento entre as tabelas.
+
+Existem algumas anotações da JPA para definições de relacionamento, são elas:
+*   **@OneToMany** - Um para Muitos (1-*) na qual define que um elemento pode ter vários elementos associados;
+*   **@OneToOne** - Um para Um (1-1) na qual define que um elemento só pode ser associado a um elemento;
+*   **@MayToMany** - Muitos para Muitos (*-*) na qual define que muitos elementos estão associados a muitos outros elementos de outra tabela. 
+
+<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/relacionamento_hibernate.png">
+
+Note que o Hibernate realizou as tratativas necessárias para adequar as estrutura de classe que foram mapeadas como entidades no projeto. Onde podemos ver a inclusão da nova entidade e a alteração da entidade existente.
+
+Outro **ponto de extrema importância** é a ordem que as entidades são persistidas no banco de dados, pois caso tente informar uma instância na qual ainda não tenha sido persistida será lançada a exceção ***Transient Property Value Exception***, que significa que um dos valores apresentados para ser persistido não está no estado *transient*.
+
+Desta forma, é necessário se atendar para ordenar a persistência na ordem que as entidades que necessitam ser persistidas antes de serem referenciadas por outras entidades que fazem relacionamento. Como no nosso exemplo, que a *Categoria* faz parte da estrutura de *Produto*, na qual é um atributo da mesma, assim, é persistida a entidade *categoria* primeiro para depois menciona-la na entidade *Produto*.
+```java
+    public static void main(String[] args) {
+        Cateogoria celulares = new Cateogoria("Celulares");
+        Produto produto = new Produto("Xiaomi Redmi", "Muito Bom", new BigDecimal(1300), TipoProduto.ELETRONICOS, celulares);
+
+        CategoriaDao cateogoriaDao = new CategoriaDao(FactoryEntity.builderEntityManager());
+        cateogoriaDao.cadastrar(celulares);
+        ProdutoDao produtoDao = new ProdutoDao(FactoryEntity.builderEntityManager());
+        produtoDao.cadastrar(produto);
+
+    }
+```
+
+## Agradecimentos
+Obrigado por ter acompanhado aos meus esforços ao aplicar o conceito da especificação JPA utilizando o framework Hibernate. :octocat:
+
+Como diria um velho mestre:
+> *"Cedo ou tarde, você vai aprender, assim como eu aprendi, que existe uma diferença entre CONHECER o caminho e TRILHAR o caminho."*
+>
+> *Morpheus - The Matrix*
+> 

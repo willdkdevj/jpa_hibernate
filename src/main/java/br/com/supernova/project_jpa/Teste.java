@@ -1,9 +1,11 @@
 package br.com.supernova.project_jpa;
 
+import br.com.supernova.project_jpa.dao.CategoriaDao;
 import br.com.supernova.project_jpa.dao.ProdutoDao;
 import br.com.supernova.project_jpa.enums.TipoProduto;
 import br.com.supernova.project_jpa.exception.ErrorJPAException;
 import br.com.supernova.project_jpa.factory.FactoryEntity;
+import br.com.supernova.project_jpa.model.Cateogoria;
 import br.com.supernova.project_jpa.model.Produto;
 
 import javax.persistence.EntityManager;
@@ -13,10 +15,13 @@ import java.math.BigDecimal;
 
 public class Teste {
     public static void main(String[] args) {
-        Produto celular = new Produto("Xiaomi Redmi", "Muito Bom", new BigDecimal(1300), TipoProduto.ELETRONICOS);
+        Cateogoria celulares = new Cateogoria("Celulares");
+        Produto produto = new Produto("Xiaomi Redmi", "Muito Bom", new BigDecimal(1300), TipoProduto.ELETRONICOS, celulares);
 
-        ProdutoDao dao = new ProdutoDao(FactoryEntity.builderEntityManager());
-        dao.cadastrar(celular);
+        CategoriaDao cateogoriaDao = new CategoriaDao(FactoryEntity.builderEntityManager());
+        cateogoriaDao.cadastrar(celulares);
+        ProdutoDao produtoDao = new ProdutoDao(FactoryEntity.builderEntityManager());
+        produtoDao.cadastrar(produto);
 
     }
 }

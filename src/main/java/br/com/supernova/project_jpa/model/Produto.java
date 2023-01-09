@@ -22,16 +22,19 @@ public class Produto {
     private LocalDate dataCriacao;
     @Enumerated(EnumType.STRING)
     private TipoProduto tipo;
+    @ManyToOne
+    private Cateogoria cateogoria;
 
     public Produto() {
     }
 
-    public Produto(String nome, String descricao, BigDecimal preco, TipoProduto tipo) {
+    public Produto(String nome, String descricao, BigDecimal preco, TipoProduto tipo, Cateogoria cateogoria) {
         this.nome = nome;
         this.descricao = descricao;
         this.preco = preco;
         this.dataCriacao = LocalDate.now();
         this.tipo = tipo;
+        this.cateogoria = cateogoria;
     }
 
     public String getNome() {
@@ -51,5 +54,9 @@ public class Produto {
     }
     public TipoProduto getTipo() {
         return tipo;
+    }
+
+    public Cateogoria getCateogoria() {
+        return cateogoria;
     }
 }
