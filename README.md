@@ -316,6 +316,129 @@ Desta forma, é necessário se atendar para ordenar a persistência na ordem que
     }
 ```
 
+## Ciclo de Vida das Entidades
+Sempre que trabalhamos com as entidades (*entity*), quando instanciamos um objeto e invocamos os métodos do *EntityManager*, ao iniciarem no contexto da transação, elas ficam trafegando entre alguns estados no ciclo de vida, além de entender as possíveis exceções que podem ser lançadas.
+
+<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/ciclodevida.png">
+
+Sobre o ciclo de vida de uma entidade, conforme a especificação da JPA, quando instanciamos uma entidade, ela é classificada em um estado chamado de ***TRANSIENT***. Este estado é aplicado para uma entidade que nunca foi persistida, ou seja, não foi gravada no banco de dados até o momento, não possuindo um id, consequentemente, não gerenciada pela JPA. Esse é o primeiro estado de uma entidade.
+
+A entidade só passa a ser observada pelo contexto da transação quando ela é atribuída ao método *persist()* do EntityManager, esta forma ela sai do estado *Transient* para o estado ***MANAGED***, ou seja, gerenciada. O *Managed* é o principal estado que uma entidade pode estar, pois tudo que ocorrer com ela nesse estado, a JPA observará e poderá sincronizar com o banco de dados.
+
+> OBS: Quando temos entidades no estado *MANAGED* é possível sincroniza-las ao banco de dados a fim de obter seu *ID* ou vinculá-las através de relacionamento, este processo se dá ao commitarmos a transação, ao chamar o método *commit()*, ou, se não finalizarmos a transação, mas se tentarmos sincronizar o estado dessa entidade com o banco de dados, através do método *flush()* no EntityManager, onde não se deseja commitar a transação, pois ainda serão realizadas algumas operações.
+
+A partir do momento que o EntityManager é encerrado através do método *close()*, ou através da retirada das entidades do contexto de persistência através do método *clear()*, as entidades mudam de estado. Este estado é chamado de ***DETACHED***, que na tradução livre seria como destacado.Quer dizer que o EntityManager não está mais as observando para replicar suas mudanças ao banco de dados, desta forma, tudo que for modificado não será alterado.
+
+> OBS: Há outro método chamado *merge()* que tem como objetivo receber uma entidade que está no estado **detached** e devolve-la ao estado **managed**. Este método não muda o estado da entidade passada como parâmetro para managed, no caso, ele devolve uma nova referência de entidade no estado managed. A que foi passada como parâmetro, contintuará como detached. 
+
+Para excluir uma entidade gerenciada (*managed*) existe o método *remove()* do EntityManager, passando esta entidade para o  estado ***REMOVED***. Quando o commit() ou o flush() for chamado, será sincronizado o estado *remove* com o banco de dados, na qual executará o comando **delete**.
+
+## Consultas (JPQL)
+O JPQL significa *Java Persistence Query Language* sua função é criar consultas em entidades persistidas em um banco de dados relacional. Sua sintaxe foi desenvolvida com base na linguagem *SQL*. Ele retorna um objeto entidade, ao invés de um campo resultado, a partir de um banco de dados, como é no SQL convencional. 
+
+### Estrutura de Consulta
+A estrutura é muito similar a linguagem SQL, mas ao invés de utilizarmos o asterísco (*) para informar que queremos o retorno de todas as colunas, utilizamos um *alias* que é o mesmo aplicado ao nomear a entidade, sendo este outra distinção do JPQL do SQL. Aqui informamos o nome da entidade na nossa aplicação, e não a tabela de banco de dados, neste nosso exemplo, estamos invocando a entidade Produto e não a tabela produtos.
+```java
+    public List<Produto> buscarTodos(){
+        /*
+         * Ao invés do nome da tabela do banco de dados é informado o nome da entidade (Neste caso é Produto)
+         * Tambén não é informado o * para retornar todos é informado um alias (Neste caso é a letra p)
+         * */
+        String jpql = "SELECT p FROM Produto p";
+        return this.entity.createQuery(jpql).getResultList();
+    }
+
+```
+<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/buscarTodos.png">
+
+Podemos realizar a consulta de uma entidade a partir de um atributo especifico da mesma. Para isso, precisamos utilizar utilizar a cláusula **WHERE** junto do alias fornecido para acessar seu atributo e é possível utilizar duas abordagens para realizar a passagem de parâmetro:
+*   **Parâmetro Nomeado** - é digitado o caracter de dois pontos (:) e depois um alias onde este também é fornecido para o método setParameter;
+*   **Parâmetro Posicional** - é digitado o caracter de interrogação (?) e o numeral correspondente a sua posição, na qual é também fornecido para o método setParameter.
+```java
+    public Produto buscarPorNome(String nome){
+        /*
+         * É possível utilizar como parâmetro o Parâmetro Nomeado, onde informamos dois pontos e depois um alias a ser passado no setParameter
+         * Também é possivel utilizar o Parâmetro Posicional (que é o que está aplicado abaixo) que informamos uma interrogação e a posição
+         * dela a ser aplicada no setParametro
+         * */
+        String jpql = "SELECT p FROM Produto p WHERE p.nome = ?1";
+        return this.entity.createQuery(jpql, Produto.class)
+                .setParameter(1, nome)
+                .getSingleResult();
+    }
+```
+<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/buscarPorNome.png">
+
+Em entidades que se relacionam com outras entidades, também é possível obter retorno passando como parâmetro do filtro a entidade relacionada por intermédio de seus atributos. Na qual o próprio JPA identifica este relacionamento e implementa a consulta inserindo os *Joins* necessários.
+```java
+    public List buscarPorCategoria(String nome){
+        /*
+         * Ao invés do nome da tabela do banco de dados é informado o nome da entidade (Neste caso é Produto)
+         * Tambén não é informado o * para retornar todos é informado um alias (Neste caso é a letra p)
+         * */
+        String jpql = "SELECT p FROM Produto p WHERE p.cateogoria.nome = :nomeCategoria";
+        return this.entity.createQuery(jpql)
+                .setParameter("nomeCategoria", nome)
+                .getResultList();
+    }
+```
+<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/buscarPorCategoria.png">
+
+Note que utilizamos para obter uma lista de produtos a partir do nome da categoria que a entidade Produto possui. Desta forma o JPA, implementa a consulta com todos os parâmetros de Join e mapeamento com chaves para que seja montada e retornada pelo Hibernate.
+
+Também é possível retornar somente um atributo de uma entidade a ser apresentado pelo retorno da consulta JPQL, para isso passamos o seu nome ao acessa-la via o alias fornecido para entidade e seu retorno será através do método *getSingleResult()*.
+```java
+    public BigDecimal buscarPrecoPorNome(String nome){
+        /*
+         * É possível retornar apenas um atributo de uma entidade ao fornecer o seu nome a consulta JPQL
+         * Para isso, informamos seu nome ao acessa-lo pelo alias e fornecendo o nome da entidade
+         * */
+        String jpql = "SELECT p.preco FROM Produto p WHERE p.nome = ?1";
+        return this.entity.createQuery(jpql, BigDecimal.class)
+                .setParameter(1, nome)
+                .getSingleResult();
+    }
+```
+<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/buscarPrecoPorNome.png">
+
+### Consultas Nomeadas
+A @NamedQuery anotação é definida como uma pré consulta com uma string de consulta que é imutável. Ao contrário de consultas dinâmicas consultas nomeadas pode melhorar o código organização, separando a JPQL seqüências de caracteres de consulta de EM POJO. Ela também passa a parâmetros de consulta em vez de incorporar o literais dinamicamente na string de consulta e, portanto, produz mais eficientes as consultas.
+```java
+@Entity
+@Table
+@NamedQuery(query = "Select e from Employee e where e.eid = :id", 
+name = "find employee by id")
+public class Employee 
+{
+   @Id
+   @GeneratedValue(strategy= GenerationType.AUTO) 
+   private int eid;
+   private String ename;
+   private double salary;
+   private String deg;
+   public Employee(int eid, String ename, double salary, String deg) 
+   {
+      super( );
+      this.eid = eid;
+      this.ename = ename;
+      this.salary = salary;
+      this.deg = deg;
+   }
+   public Employee( ) 
+   {
+      super();
+   }
+
+   \\ getter e setter
+}
+```
+
+### Ansioso e Preguiçoso
+O conceito mais importante da JPA é de fazer uma cópia do banco de dados em memória cache. Ao mesmo tempo que fazem transações com o banco de dados, a JPA em primeiro lugar cria um conjunto duplicado de dados e somente quando é cometido por meio de um gerenciador de entidades, as alterações são realizadas no banco de dados.
+
+Há duas maneiras de buscar os registros do banco de dados.
+ 
+
 ## Agradecimentos
 Obrigado por ter acompanhado aos meus esforços ao aplicar o conceito da especificação JPA utilizando o framework Hibernate. :octocat:
 
