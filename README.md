@@ -433,11 +433,42 @@ public class Employee
 }
 ```
 
-### Ansioso e Preguiçoso
-O conceito mais importante da JPA é de fazer uma cópia do banco de dados em memória cache. Ao mesmo tempo que fazem transações com o banco de dados, a JPA em primeiro lugar cria um conjunto duplicado de dados e somente quando é cometido por meio de um gerenciador de entidades, as alterações são realizadas no banco de dados.
+### Ansioso (EAGER) e Preguiçoso (LAZY)
+É muito comum encontrar aplicações que têm problemas de performance por conta da camada de persistência, por conta de queries mal planejadas, que geram esses gargalos. Pois esquecemos de dar uma analisada nos comandos SQL que foram gerados, se não tem nenhum tipo de problema, nenhum tipo de consulta excessiva, algo que pode gerar algum impacto em performance nas aplicações.
 
-Há duas maneiras de buscar os registros do banco de dados.
- 
+isto ocorre devido ao **mapeamento do relacionamento**, na qual existe uma característica na JPA que explicita como deve ser realizado o tratamento para estas consultas relacionais. Por padrão, todo relacionamento que é *To One*, ou seja, *@Manytoone* ou *@OnetoOne*, será executado um comando *Select* que incluirá um **Join** para carregar outras entidades relacionadas a entidade principal.
+
+Desta forma, este é o problema da lentidão nas consultas, devido a carregar todas as outras entidades para retornar a consulta. Mas muitas vezes só queremos consultar somente aquela entidade, mas por padrão, sempre é carregadas todas as entidades no contexto da consulta, ocasionando o gargalo.
+
+Já os relacionamentos *To Many*, *@OnetoMany* ou *@ManytoMany*, não possuem essa característica de carregar todas as entidades atreladas a entidade principal. A JPA, ao verificar que se trata de uma lista, compreende que existe diversos registros, e que pode ser pesado. na qual poderia sobrecarregar o sistema com inúmeros registros para a memória do computador. Desta forma, tudo o que *To One* **é carregado automaticamente**, e tudo o que é *To Many* **não é carregado automaticamente**.
+
+Este é o *comportamento padrão* da JPA, na qual é analisada a estratégia de carregamento dos relacionamentos a ser abordada conforme a anotação. Essa estratégia, ela tem dois possíveis comportamentos:
+*   ***Eager*** (Ansioso) - Todo relacionamento ***To One***, o padrão é ele ser *eager*, ele faz o carregamento antecipado.
+*   ***Lazy*** (Preguiçoso) - Já os relacionamentos ***To Many***, por padrão o comportamento é chamado de *lazy*, que é o carregamento preguiçoso, ou seja, o carregamento é tardio.
+
+Então existem essas duas estratégias de carregamento, o carregamento *eager*, que carrega junto com a entidade, por mais que você não utilize aquele relacionamento, e o carregamento *lazy*, que só carrega se for feito o acesso. Desta maneira, a boa prática é todo relacionamento ***To One***, inserir um parêntese no *@ManyToOne* aplicando o parâmetro denominado ***fetch***, na qual permite controlar o carregamento através de dois valores, "EAGER" e "LAZY", sendo que, para *To One* o é aplicado o valor ***LAZY***.
+
+```java
+@ManyToOne(fetch = FetchType.LAZY)
+private Cliente cliente;
+
+```
+Esta é uma boa prática, porém pode gerar um efeito colateral. A partir do momento que nós trocamos o relacionamento para ser lazy, podemos ter algum impacto na nossa aplicação. Porque pode acontecer de, queremos acessar um atributo de uma entidade atrelada a entidade principal que consultamos, mas o *Entity Manager* já estar fechado. desta forma, a JPA não vai conseguir disparar esse select para carregar essa informação, ocasionando uma *exception* **bem famosa do hibernate**, que é a tal da ***LazyInitializationException***.
+
+Em uma aplicação real, uma aplicação web em uma API, por exemplo, pode acontecer de, no momento de você acessar uma determinada informação, o *Entity Manager* estar fechado, porque é muito comum nas aplicações, o entity manager ter seu escopo limitado apenas a chamada de um método, onde a solução seria utilizar uma ***query planejada***.
+
+É uma query onde é planejado uma subconsulta a invocar um método auxiliar, na qual retorno as informações necessárias, para evitar fazer outros selects, para evitar tomar um lazy initialization exception se o entity manager estiver fechado.
+
+Desta maneira, estas *Query Planejadas* são métodos criados nas classes DAO que realizam a consulta a entidade principal (nesta caso Pedido), e inserimos o **JOIN FETCH** apontando os parâmetros que relacionam estas entidades para obter o retorno que desejamos.
+```java
+public Pedido buscarPedidoComCliente(Long id){
+    return entityManager.createQuery("SELECT p FROM Pedido p JOIN FETCH p.cliente WHERE p.id = :id", Pedido.class)
+                        .setParameter("id", id)
+                        .getSingleResult();
+}
+```
+
+Agora temos uma consulta preparada para tratar um relacionamento especifico para obter uma informação.
 
 ## Agradecimentos
 Obrigado por ter acompanhado aos meus esforços ao aplicar o conceito da especificação JPA utilizando o framework Hibernate. :octocat:
