@@ -470,6 +470,11 @@ public Pedido buscarPedidoComCliente(Long id){
 
 Agora temos uma consulta preparada para tratar um relacionamento especifico para obter uma informação.
 
+
+### Criteria API
+Uma solução que já existia no hibernate, só que só na versão 2 da JPA ela entrou para a especificação foi o recurso denominado ***Criteria.***
+
+
 ## Agradecimentos
 Obrigado por ter acompanhado aos meus esforços ao aplicar o conceito da especificação JPA utilizando o framework Hibernate. :octocat:
 
