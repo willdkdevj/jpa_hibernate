@@ -4,6 +4,24 @@ Utilização da especificação JPA com o framework Hibernate para utilização 
 [![Maven Badge](https://img.shields.io/badge/-Maven-black?style=flat-square&logo=Apache-Maven&logoColor=white&link=https://maven.apache.org/)](https://maven.apache.org/)
 [![JPA Badge](https://img.shields.io/badge/-JPA-blue?style=flat-square&logo=GitHub&logoColor=white&link=https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)](https://docs.jboss.org/author/display/AS71/JPA%20Reference%20Guide.html)
 [![Hibernate Badge](https://img.shields.io/badge/-Hibernate-green?style=flat-square&logo=Hibernate&logoColor=white&link=https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)](https://docs.jboss.org/hibernate/orm/current/quickstart/html_single/)
+![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=EM%20DESENVOLVIMENTO&color=GREEN&style=for-the-badge)
+
+## Indice
+
+*   [Por que utilizar a especificação JPA](#por-que-utilizar-a-especificação-jpa)
+*   [O framework Hibernate](#o-framework-hibernate)
+*   [A Especificação JPA](#a-especificação-jpa)
+*   [Hibernate + JPA](#hibernate--jpa)
+*   [Projeto Maven e suas dependências](#projeto-maven-e-suas-dependências)
+    *   [O Arquivo Persistence (XML)](#o-arquivo-persistence-xml)
+    *   [Entidades (Entity)](#entidades-entity)
+    *   [Transaction (Camada DAO)](#transaction-camada-dao)
+*   [Relacionamentos Entre Tabelas (Mapeamento)](#relacionamentos-entre-tabelas-mapeamento)
+*   [Ciclo de Vida das Entidades](#ciclo-de-vida-das-entidades)
+*   [Consultas (JPQL)](#consultas-jpql)
+*   [Ansioso (EAGER) e Preguiçoso (LAZY)](#ansioso-eager-e-preguiçoso-lazy)
+*   [Criteria API](#criteria-api)
+
 
 ## Por que utilizar a especificação JPA
 O JDBC surgiu para fazer o papel de interpretador entre os bancos de dados e as aplicações desenvolvidas em Java. Mas existe alguns fatores em sua estrutura que complica sua manutenção e operabilidade nos projetos que são o **alto acoplamento** com banco de dados, onde qualquer mudança no banco de dados gera um impacto enorme na aplicação, além disso, o segundo fator problemático desta implmentação é que sua estrutura é **muito verbosa**, o que ocasiona a escrita de muito código para torná-la efetiva ao projeto.
@@ -399,7 +417,7 @@ Também é possível retornar somente um atributo de uma entidade a ser apresent
                 .getSingleResult();
     }
 ```
-<img align="middle" width="400" height="250" src="https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/buscarPrecoPorNome.png">
+![Buscar Por Nome](https://github.com/willdkdevj/jpa_hibernate/blob/master/assets/buscarPrecoPorNome.png)
 
 ### Consultas Nomeadas
 A @NamedQuery anotação é definida como uma pré consulta com uma string de consulta que é imutável. Ao contrário de consultas dinâmicas consultas nomeadas pode melhorar o código organização, separando a JPQL seqüências de caracteres de consulta de EM POJO. Ela também passa a parâmetros de consulta em vez de incorporar o literais dinamicamente na string de consulta e, portanto, produz mais eficientes as consultas.
@@ -433,7 +451,7 @@ public class Employee
 }
 ```
 
-### Ansioso (EAGER) e Preguiçoso (LAZY)
+## Ansioso (EAGER) e Preguiçoso (LAZY)
 É muito comum encontrar aplicações que têm problemas de performance por conta da camada de persistência, por conta de queries mal planejadas, que geram esses gargalos. Pois esquecemos de dar uma analisada nos comandos SQL que foram gerados, se não tem nenhum tipo de problema, nenhum tipo de consulta excessiva, algo que pode gerar algum impacto em performance nas aplicações.
 
 isto ocorre devido ao **mapeamento do relacionamento**, na qual existe uma característica na JPA que explicita como deve ser realizado o tratamento para estas consultas relacionais. Por padrão, todo relacionamento que é *To One*, ou seja, *@Manytoone* ou *@OnetoOne*, será executado um comando *Select* que incluirá um **Join** para carregar outras entidades relacionadas a entidade principal.
@@ -471,7 +489,7 @@ public Pedido buscarPedidoComCliente(Long id){
 Agora temos uma consulta preparada para tratar um relacionamento especifico para obter uma informação.
 
 
-### Criteria API
+## Criteria API
 Uma solução que já existia no hibernate, só que só na versão 2 da JPA ela entrou para a especificação foi o recurso denominado ***Criteria.***
 
 
